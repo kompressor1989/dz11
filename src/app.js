@@ -200,7 +200,85 @@ class ContactsUI extends Contacts {
                     this.onEdit(id);
                 });
             });
+
+            this.setStorage();
+        };
+
+        getCookie(name) {
+            let matches = document.cookie.match(new RegExp(
+                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"));
+    
+            return matches ? decodeURIComponent(matches[1]) : undefined;
         }
+    
+        setCookie(name, value, options = {}) {
+            options = {
+                path: '/',
+                ...options 
+            };
+        
+            if (options.expires instanceof Date) { 
+                options.expires = options.expires.toUTCString();
+            }
+             
+            let updatedCookie = encodeURIComponent(name) + "=" + encodeURIComponent(value);
+        
+            for (let optionKey in options) { updatedCookie += "; " + optionKey;
+             
+            let optionValue = options[optionKey];
+        
+            if (optionValue !== true) { 
+                updatedCookie += "=" + optionValue; 
+            }
+        }
+            document.cookie = updatedCookie; 
+        }
+
+        setStorage() {
+            let dataTmp = this.data.map(item => {
+                return {...{ id: item.id }, ...item.get()}
+            });
+            let dataJson = JSON.stringify(this.data);
+            if(!dataJson) return;
+            localStorage.setItem('info', dataJson)
+            
+            if(dataJson && dataJson != '[]') this.setCookie('dataExp', '1', {"max-age": 864000});
+        };
+
+
+        getStorage() {
+            let dataTmp = localStorage.getItem('info');
+            dataTmp = JSON.parse(dataTmp);
+            if(!dataTmp) return;
+            dataTmp.forEach(item => {
+                delete item.id;
+                this.add(item)})
+        };
+
+        getData() {
+
+            fetch('https://jsonplaceholder.typicode.com/users')
+            .then(response => { 
+                if(response.status == 200) return response.json();
+            })
+            .then(body => { 
+                if(body && body.length > 0) {
+                    let dataTmp = body.map(item => {
+                        return {
+                            name: item.name,
+                            phone: item.phone,
+                        };
+                    })
+    
+                    dataTmp.forEach(item => {
+                        this.add(item);
+                    });
+    
+                    this.update();
+                }
+            });
+        };
+    
 
         onEdit(id) {
             const contact = this.get(id, true);
@@ -264,6 +342,12 @@ class ContactsUI extends Contacts {
             this.data = [];
             this.add({name: 'Pol', phone: '4755747848'});
             this.add({name: 'Snek', phone: '8855747848'});
+            let dataExp = this.getCookie('dataExp');
+            if(!dataExp) {
+                localStorage.removeItem('info');
+            }
+            this.getData();
+            this.getStorage();
             console.log(this.data);
             this.data = this.get();
 
