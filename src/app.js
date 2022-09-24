@@ -235,22 +235,22 @@ class ContactsUI extends Contacts {
         }
 
         setStorage() {
-            let dataTmp = this.data.map(item => {
+            this.dataTmp = this.data.map(item => {
                 return {...{ id: item.id }, ...item.get()}
             });
-            let dataJson = JSON.stringify(this.data);
-            if(!dataJson) return;
-            localStorage.setItem('info', dataJson)
+            this.dataJson = JSON.stringify(this.dataTmp);
+            if(!this.dataJson) return;
+            localStorage.setItem('info', this.dataJson)
             
-            if(dataJson && dataJson != '[]') this.setCookie('dataExp', '1', {"max-age": 864000});
+            if(this.dataJson && this.dataJson != '[]') this.setCookie('dataExp', '1', {"max-age": 864000});
         };
 
 
         getStorage() {
-            let dataTmp = localStorage.getItem('info');
-            dataTmp = JSON.parse(dataTmp);
-            if(!dataTmp) return;
-            dataTmp.forEach(item => {
+            this.dataTmp = localStorage.getItem('info');
+            this.dataTmp = JSON.parse(this.dataTmp);
+            if(!this.dataTmp) return;
+            this.dataTmp.forEach(item => {
                 delete item.id;
                 this.add(item)})
         };
@@ -335,21 +335,23 @@ class ContactsUI extends Contacts {
             this.formEditElem.remove();
             this.update();
 
-            console.log('ok')
         };
             
         init(Id) {
-            this.data = [];
-            this.add({name: 'Pol', phone: '4755747848'});
-            this.add({name: 'Snek', phone: '8855747848'});
-            let dataExp = this.getCookie('dataExp');
-            if(!dataExp) {
+            // this.data = [];
+           
+            this.dataExp = this.getCookie('dataExp');
+            if(!this.dataExp) {
                 localStorage.removeItem('info');
             }
-            this.getData();
+
             this.getStorage();
+
+            if (this.get().length == 0) this.getData();
+
+           
             console.log(this.data);
-            this.data = this.get();
+            // this.data = this.get();
 
             const rootElem = document.querySelector('#'+ Id);
             if (!rootElem) return;
